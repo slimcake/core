@@ -3,7 +3,7 @@
   "description": "Core components for slimcake framework",
   "license": "MIT",
   "require": {
-    "php": ">=5.3"
+    "php": ">=5.5"
   },
   "autoload": {
     "psr-4": {
