@@ -1,0 +1,13 @@
+{
+  "name": "slimcake/core",
+  "description": "Core components for slimcake framework",
+  "license": "MIT",
+  "require": {
+    "php": ">=5.3"
+  },
+  "autoload": {
+    "psr-4": {
+      "Slimcake\\Core\\": "src/"
+    }
+  }
+}
