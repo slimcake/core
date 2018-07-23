@@ -6,7 +6,7 @@ namespace Slimcake\Core;
  * Class DataSource
  * @package Slimcake\Core
  */
-class DataSource
+class DataSource extends Singleton
 {
     /** @var \PDO $pdo */
     protected $pdo;
@@ -21,7 +21,13 @@ class DataSource
             \PDO::ATTR_EMULATE_PREPARES => false
         );
 
-        $dsn = Config::get('DATABASE_DSN', null);
+        $dsn = sprintf(
+            'mysql:host=%s;port=%s;dbname=%s',
+            Config::get('DATABASE_HOST', '127.0.0.1'),
+            Config::get('DATABASE_PORT', 3306),
+            Config::get('DATABASE_NAME', null)
+        );
+
         $user = Config::get('DATABASE_USER', 'root');
         $pass = Config::get('DATABASE_PASS', null);
         $options = array_merge($options, Config::get('DATABASE_OPTIONS', array()));
@@ -30,16 +36,35 @@ class DataSource
     }
 
     /**
-     * @return DataSource
+     * @param string $table
+     * @param array $where
+     * @param array $order
+     * @return array
      */
-    public static function getInstance()
+    protected function createQuery($table, $where = array(), $order = array())
     {
-        static $instance;
-        if (empty($instance)) {
-            $instance = new static();
+        $data = array();
+        $query = 'SELECT *'
+            . ' FROM `%s`';
+
+        if (empty($where) === false) {
+            $filters = array_map(function ($k) {
+                return sprintf('`%s` = ?', Inflector::underscore($k));
+            }, array_keys($where));
+
+            $data = array_values($where);
+            $query = sprintf('%s WHERE %s', $query, implode(' AND ', $filters));
         }
 
-        return $instance;
+        if (empty($order) === false) {
+            $orders = array_map(function ($k, $v) {
+                return sprintf('`%s` %s', Inflector::underscore($k), strtoupper($v));
+            }, array_keys($order), $order);
+
+            $query = sprintf('%s ORDER BY %s', $query, implode(', ', $orders));
+        }
+
+        return array(sprintf($query, $table), $data);
     }
 
     /** Begin transaction */
@@ -147,22 +172,28 @@ class DataSource
     }
 
     /**
-     * @param string $query
-     * @param array $data
-     * @return mixed
+     * @param string $table
+     * @param array $where
+     * @param array $order
+     * @return array
      */
-    public function find($query, $data = array())
+    public function find($table, $where = array(), $order = array())
     {
+        list($query, $data) = $this->createQuery($table, $where, $order);
+
         return $this->execute($query, $data)->fetch(\PDO::FETCH_ASSOC);
     }
 
     /**
-     * @param string $query
-     * @param array $data
+     * @param string $table
+     * @param array $where
+     * @param array $order
      * @return array
      */
-    public function findAll($query, $data = array())
+    public function findAll($table, $where = array(), $order = array())
     {
+        list($query, $data) = $this->createQuery($table, $where, $order);
+
         return $this->execute($query, $data)->fetchAll(\PDO::FETCH_ASSOC);
     }
 }

@@ -14,7 +14,7 @@ class Dispatcher
      */
     public static function parseURI()
     {
-        $path = Server::get('PATH_INFO');
+        $path = Server::getInstance()->get('PATH_INFO');
         $routes = explode('/', trim($path, '/'));
 
         $args = array();

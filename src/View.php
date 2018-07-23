@@ -71,8 +71,7 @@ class View
             $render = sprintf('%s/%s', $this->controller, $render);
         }
 
-        $render = ltrim($render, '/');
-        $this->render = sprintf('%s.%s', $render, static::EXTENSION);
+        $this->render = sprintf('%s.%s', ltrim($render, '/'), static::EXTENSION);
     }
 
     /**

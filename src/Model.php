@@ -31,22 +31,56 @@ class Model
      * Get validation constraints
      * @return array
      */
-    protected function constraints()
+    protected static function validations()
     {
         return array();
     }
 
     /**
-     * @return Validator
+     * @param array $data
+     * @return static[]
      */
-    protected function validator()
+    protected static function populate(array $data)
     {
-        static $validator;
-        if (empty($validator)) {
-            $validator = new Validator($this);
+        $obj = array();
+        foreach ($data as $v) {
+            $obj[] = new static($v);
         }
 
-        return $validator;
+        return $obj;
+    }
+
+    /**
+     * @param int $id
+     * @return array
+     */
+    public static function find($id)
+    {
+        return static::findBy(array('id' => $id));
+    }
+
+    /**
+     * @param array $where
+     * @param array $order
+     * @return null|Model|static
+     */
+    public static function findBy($where = array(), $order = array())
+    {
+        $data = DataSource::getInstance()->find(static::TABLE_NAME, $where, $order);
+
+        return empty($data) ? null : new static($data);
+    }
+
+    /**
+     * @param array $where
+     * @param array $order
+     * @return array|Model[]|static[]
+     */
+    public static function findAll($where = array(), $order = array())
+    {
+        $data = DataSource::getInstance()->findAll(static::TABLE_NAME, $where, $order);
+
+        return empty($data) ? array() : static::populate($data);
     }
 
     /**
@@ -56,7 +90,9 @@ class Model
      */
     public function validate()
     {
-        return $this->validator()->validate($this->constraints());
+        $validator = new Validator($this);
+
+        return $validator->validate(static::validations());
     }
 
     /**
